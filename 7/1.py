@@ -7,6 +7,7 @@ class FileSystem:
     def __init__(self) -> None:
         self.root = Directory('/')
         self.currentDir = self.root
+        self.space = 70000000
 
     def __sizeof__(self) -> int:
         return self.root.__sizeof__()
@@ -32,6 +33,15 @@ class FileSystem:
             # print(f'changing current directory to {newDir.name}')
             self.currentDir = newDir
         return
+
+    def free_space(self, amt) -> int:
+        unused = self.space - self.__sizeof__()
+        goal = amt - unused
+
+        if (goal <= 0): return
+        print(f'Need to free up at least {goal} space')
+        return goal
+
 
 
 class Directory:
@@ -83,6 +93,16 @@ class Directory:
             ret += d.calc_answer()
         return ret
 
+    def getDirs(self):
+        if (len(self.directories) == 0):
+            return [(self.name, self.__sizeof__())]
+        dirs = []
+        for d in self.directories:
+            dirs.extend(d.getDirs())
+        dirs.append((self.name, self.__sizeof__()))
+        return dirs
+
+
 class File:
     def __init__(self, name, size) -> None:
         self.name = name
@@ -122,5 +142,16 @@ with open('input.txt','r') as f:
             fs.currentDir.addFile(newFile)
 
 # Find the answer
-print('Combined size of directories <= 100000:', fs.root.calc_answer_a(100000))
+# print('Combined size of directories <= 100000:', fs.root.calc_answer_a(100000))
 
+goal = fs.free_space(30000000)
+
+list_of_dirs = fs.root.getDirs()
+# print(list_of_dirs)
+
+min = fs.space
+for (dir, size) in list_of_dirs:
+    if (size >= goal) and (size < min):
+        min = size
+
+print('answer:',min)
